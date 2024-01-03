@@ -1,6 +1,29 @@
+// import { Buffer } from 'buffer';
+
+function encryptData(data) {
+    const input = JSON.stringify(data)
+    return encryptString(input)
+}
+
+function decryptJSONString(input, date) {
+    if (!input) return "";
+    let decrypted = decryptString(input, genSecretKey(date || new Date()))
+    if (!isJSON(decrypted)) {
+        if (date) {
+            return ""
+        }
+        decrypted = decryptString(input, genSecretKey(date, true))
+        if (!isJSON(decrypted)) {
+            return ""
+        }
+    }
+    return decrypted;
+}
+
 function decodeBase64(base64String) {
     if (typeof window === "undefined" && typeof Buffer !== 'undefined') {
-        return Buffer.from(base64String, 'base64').toString('utf-8');
+        const buffer = Buffer.from(base64String, 'base64');
+        return buffer.toString('utf-8');
     }
     return window.atob(base64String)
 }
@@ -9,17 +32,16 @@ function encodeBase64(str) {
     if (typeof window === "undefined" && typeof Buffer !== 'undefined') {
         return Buffer.from(str, 'utf-8').toString('base64');
     }
-
     return window.btoa(str)
 }
 
-function encryptString(inputString, secretKey) {
-    if (!inputString) return ""
+function encryptString(input, secretKey) {
+    if (!input) return ""
     secretKey = secretKey || genSecretKey()
     const n = secretKey.length
     const byteArray = []
-    for (let i = 0; i < inputString.length; i++) {
-        const charCode = inputString.charCodeAt(i);
+    for (let i = 0; i < input.length; i++) {
+        const charCode = input.charCodeAt(i);
         const iv = secretKey.charCodeAt(i % n)
         const encryptedCharCode = charCode + iv;
         byteArray.push(encryptedCharCode)
@@ -29,11 +51,11 @@ function encryptString(inputString, secretKey) {
     return encryptData
 }
 
-function decryptString(inputString, secretKey) {
-    if (!inputString) return ""
+function decryptString(input, secretKey) {
+    if (!input) return ""
     secretKey = secretKey || genSecretKey()
-    inputString = decodeBase64(inputString)
-    const byteArray = inputString.split(',').map(Number);
+    input = decodeBase64(input)
+    const byteArray = input.split(',').map(Number);
     const n = secretKey.length;
     const res = []
     for (let i = 0; i < byteArray.length; i++) {
@@ -46,10 +68,22 @@ function decryptString(inputString, secretKey) {
     return res.join("")
 }
 
-function getPreviousMinuteDate(date) {
-    const now = date || new Date();
-    now.setMinutes(now.getMinutes() - 1);
-    return now;
+function genSecretKey(date, previousMinute) {
+    if (!date) {
+        date = new Date();
+    }
+    if (previousMinute === true) {
+        date = getPreviousMinuteDate(date)
+    }
+    const timestampInSeconds = Math.floor(date.getTime() / 1000);
+    const timestampInMinutes = timestampInSeconds - (timestampInSeconds % 60);
+    const s = (timestampInMinutes * 3 / 10).toString();
+
+    return reverseString(s) + s;
+}
+
+function reverseString(input) {
+    return input.split('').reverse().join('');
 }
 
 function isJSON(str) {
@@ -61,30 +95,8 @@ function isJSON(str) {
     }
 }
 
-function reverseString(input) {
-    return input.split('').reverse().join('');
-}
-
-function genSecretKey(date, isPreviousMinute) {
-    if (!date) {
-        date = new Date();
-    }
-    if (isPreviousMinute === true) {
-        date = getPreviousMinuteDate(date)
-    }
-    const timestampInSeconds = Math.floor(date.getTime() / 1000);
-    const timestampInMinutes = timestampInSeconds - (timestampInSeconds % 60);
-    const s = (timestampInMinutes * 3 / 10).toString();
-
-    return reverseString(s) + s;
-}
-
-//test
-function test() {
-    var str = "你好licat";
-    var encryptData = encryptString(str);
-    console.log(encryptData);
-
-    var decryptData = decryptString(encryptData);
-    console.log(decryptData);
+function getPreviousMinuteDate(date) {
+    const now = date || new Date();
+    now.setMinutes(now.getMinutes() - 1);
+    return now;
 }

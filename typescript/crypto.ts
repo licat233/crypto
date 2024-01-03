@@ -1,4 +1,4 @@
-// import { Buffer } from 'buffer';
+import { Buffer } from 'buffer';
 
 export function encryptData(data: any): string {
     const input = JSON.stringify(data)
