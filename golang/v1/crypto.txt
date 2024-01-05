@@ -78,10 +78,14 @@ func DecryptJsonBase64Data(data []byte) []byte {
 // 解密json字符串, 解析失败时，会返回空字符
 func DecryptJSONString(input []byte, secretKey string) []byte {
 	date := time.Now()
-	if secretKey == "" {
+	hasKey := secretKey != ""
+	if !hasKey {
 		secretKey = GenSecretKey(&date, false)
 	}
 	decrypted := DecryptString(string(input), secretKey)
+	if hasKey {
+		return []byte(decrypted)
+	}
 	if !IsJSON(decrypted) {
 		decrypted = DecryptString(string(input), GenSecretKey(&date, true))
 		if !IsJSON(decrypted) {
@@ -93,6 +97,9 @@ func DecryptJSONString(input []byte, secretKey string) []byte {
 
 // 加密字符串
 func EncryptString(input string, secretKey string) []byte {
+	if len(input) == 0 {
+		return []byte{}
+	}
 	if secretKey == "" {
 		secretKey = GenSecretKey(nil, false)
 	}
@@ -109,6 +116,9 @@ func EncryptString(input string, secretKey string) []byte {
 
 // 解密字符串
 func DecryptString(input string, secretKey string) []byte {
+	if len(input) == 0 {
+		return []byte{}
+	}
 	if secretKey == "" {
 		date := time.Now()
 		secretKey = GenSecretKey(&date, false)
