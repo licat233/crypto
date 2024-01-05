@@ -1,4 +1,4 @@
-const cryptox = (function () {
+const Cryptox = (function () {
     function encrypt(sourceData: any, secretKey?: string): string {
         if (!sourceData) return "";
         let jsonStr = JSON.stringify(sourceData)

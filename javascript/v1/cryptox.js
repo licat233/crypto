@@ -1,4 +1,4 @@
-const cryptox = (function () {
+const Cryptox = (function () {
     function encrypt(sourceData, secretKey) {
         if (!sourceData) return "";
         let jsonStr = JSON.stringify(sourceData)
@@ -116,13 +116,3 @@ const cryptox = (function () {
         decrypt: decrypt,
     }
 })();
-
-function test() {
-    const a = "你好licat";
-    const b = cryptox.encrypt(a);
-    console.log(b);
-    const c = cryptox.decrypt(b);
-    console.log(c);
-}
-
-test();
