@@ -1,8 +1,8 @@
 # crypto
 
-Simple encryption algorithm, for utf-8.
+Simple encryption algorithm.
 
-一个简单的加密工具，支持unicode；
+一个简单的加密工具；
 
 ## 核心算法: 凯撒算法-Caesar cipher
 
