@@ -4,17 +4,16 @@ const Cryptox = (function () {
         let jsonStr = JSON.stringify(sourceData)
         jsonStr = (jsonStr + "").trim()
         if (!jsonStr) return ""
-        let base64Str = encodeBase64(jsonStr)
         secretKey = (secretKey || "").trim();
         secretKey = secretKey || genSecretKey()
         const unicodeArray: number[] = []
-        const base64Array: string[] = base64Str.split('')
+        const base64Array: string[] = jsonStr.split('')
         const m = base64Array.length
         const secretArray = secretKey.split('')
         const n = secretArray.length
         for (let i = 0; i < m; i++) {
-            const unicodeValue = base64Array[i].charCodeAt(0);
-            const iv = secretArray[i % n].charCodeAt(0)
+            const unicodeValue = encodeUnicode(base64Array[i])[0];
+            const iv = encodeUnicode(secretArray[i % n])[0];
             unicodeArray.push(unicodeValue + iv)
         }
         const unicodeStr = unicodeArray.toString()
@@ -38,11 +37,10 @@ const Cryptox = (function () {
         const n = secretArray.length
         for (let i = 0; i < m; i++) {
             const unicodeValue = unicodeArray[i];
-            const iv = secretArray[i % n].charCodeAt(0)
-            base64Arr[i] = String.fromCharCode(unicodeValue - iv);
+            const iv = encodeUnicode(secretArray[i % n])[0];
+            base64Arr[i] = decodeUnicode(unicodeValue - iv);
         }
-        const base64Str = base64Arr.join("")
-        const decryptData = decodeBase64(base64Str)
+        const decryptData = base64Arr.join("")
         if (validJSON) {
             if (isJSON(decryptData) || hasScretKey) {
                 return decryptData
@@ -67,6 +65,14 @@ const Cryptox = (function () {
         return base64Chars;
     }
 
+    function decodeUnicode(...codes: number[]): string {
+        return String.fromCharCode(...codes);
+    }
+
+    function encodeUnicode(str: string): number[] {
+        return str.split('').map(char => char.charCodeAt(0));
+    }
+
     function genSecretKey(date?: Date, previousMinute?: boolean): string {
         if (!date) {
             date = new Date();
@@ -76,7 +82,7 @@ const Cryptox = (function () {
         }
         const timestampInSeconds = Math.floor(date.getTime() / 1000);
         const timestampInMinutes = timestampInSeconds - (timestampInSeconds % 60);
-        const s = (timestampInMinutes * 3 / 10).toString();
+        const s = (timestampInMinutes * date.getMinutes() / 10).toString();
         return s.split('').reverse().join('') + s;
     }
 
@@ -116,13 +122,3 @@ const Cryptox = (function () {
         decrypt: decrypt,
     }
 })();
-
-function jscrypttest() {
-    const a = "你好licat";
-    const b = cryptox.encrypt(a);
-    console.log(b);
-    const c = cryptox.decrypt(b);
-    console.log(c);
-}
-
-jscrypttest();

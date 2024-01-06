@@ -7,19 +7,18 @@ class Cryptox
         $jsonStr = json_encode($sourceData, JSON_UNESCAPED_UNICODE);
         $jsonStr = trim($jsonStr);
         if (empty($jsonStr)) return "";
-        $base64Str = base64_encode($jsonStr);
-        $base64Arr = str_split($base64Str);
+        $base64Arr = self::stringToArray($jsonStr);
         $m = count($base64Arr);
-
         $secretKey = trim($secretKey);
         $hasSecretKey = $secretKey && strlen($secretKey) > 0;
         if (!$hasSecretKey) $secretKey = self::genSecretKey();
-        $secretKeyArr = str_split($secretKey);
+        echo $secretKey;
+        $secretKeyArr = self::stringToArray($secretKey);
         $n = count($secretKeyArr);
         $unicodeArray = [];
         for ($i = 0; $i < $m; $i++) {
-            $unicodeValue = ord($base64Arr[$i]);
-            $iv = ord($secretKeyArr[$i % $n]);
+            $unicodeValue = self::encodeUnicode($base64Arr[$i]);
+            $iv = self::encodeUnicode($secretKeyArr[$i % $n]);
             $unicodeArray[] = $unicodeValue + $iv;
         }
 
@@ -30,7 +29,6 @@ class Cryptox
 
     public static function decrypt($encryptString, $validJSON = false, $secretKey = "")
     {
-        if (empty($encryptString)) return "";
         $encryptString = trim((string)$encryptString);
         if (empty($encryptString)) return "";
 
@@ -43,18 +41,17 @@ class Cryptox
         $hasSecretKey = $secretKey && strlen($secretKey) > 0;
         if (!$hasSecretKey) $secretKey = self::genSecretKey();
 
-        $secretKeyArr = str_split($secretKey);
+        $secretKeyArr = self::stringToArray($secretKey);
         $n = count($secretKeyArr);
 
         $base64Arr = [];
         for ($i = 0; $i < $m; $i++) {
             $unicodeValue = $unicodeArray[$i];
-            $iv = ord($secretKeyArr[$i % $n]);
-            $base64Arr[$i] = chr($unicodeValue - $iv);
+            $iv = self::encodeUnicode($secretKeyArr[$i % $n]);
+            $base64Arr[$i] = self::decodeUnicode($unicodeValue - $iv);
         }
 
-        $base64Str = implode("", $base64Arr);
-        $decryptData = base64_decode($base64Str);
+        $decryptData = implode("", $base64Arr);
 
         if ($validJSON) {
             if (self::isJSON($decryptData) || $hasSecretKey) {
@@ -67,29 +64,27 @@ class Cryptox
         return $decryptData;
     }
 
-    private static function getPreviousMinuteDate($date = null)
+    private static function getPreviousMinuteDate($timestamp = null)
     {
-        if ($date == null) {
-            $now = new DateTime();
-            $date = $now;
+        if ($timestamp == null) {
+            $timestamp = time();
         }
-        $interval = new DateInterval('PT1M');
-        $date->sub($interval);
-        return $date;
+        return strtotime("-1 minute", $timestamp);
     }
 
-    private static function genSecretKey($date = null, $previousMinute = false)
+    private static function genSecretKey($timestamp = null, $previousMinute = false)
     {
-        if ($date == null) {
-            $now = new DateTime();
-            $date = $now;
+        if ($timestamp == null) {
+            $timestamp = time();
         }
         if ($previousMinute) {
-            $date = self::getPreviousMinuteDate($date);
+            $timestamp = self::getPreviousMinuteDate($timestamp);
         }
-        $timestampInSeconds = $date->getTimestamp();
-        $timestampInMinutes = $timestampInSeconds - ($timestampInSeconds % 60);
-        return strval($timestampInMinutes);
+        $timestampInMinutes = $timestamp - ($timestamp % 60);
+        $minutes = date('i', $timestamp);
+        $timestampInMinutes = $timestampInMinutes * $minutes / 10;
+        $s = strval($timestampInMinutes);
+        return strrev($s) . $s;
     }
 
     private static function isJSON($data = "")
@@ -114,5 +109,20 @@ class Cryptox
     private static function unshuffleString($shuffledText)
     {
         return self::shuffleString($shuffledText);
+    }
+
+    private static function encodeUnicode($str)
+    {
+        return mb_ord($str, 'UTF-8');
+    }
+
+    private static function decodeUnicode($unicode)
+    {
+        return mb_chr($unicode, 'UTF-8');
+    }
+
+    private static function stringToArray($str)
+    {
+        return mb_str_split($str, 1, 'UTF-8');
     }
 }

@@ -8,11 +8,11 @@ Simple encryption algorithm, for utf-8.
 
 ### 加密:
 
-明文字符(字符串) --> base64编码 --> 转化为unicode码 --> 编码偏移加密 --> 编码为字符 --> base64编码 --> 打乱顺序(前后双指针方式) = 密文
+明文字符(字符串) -->  转化为unicode码 --> 编码偏移加密 --> 编码为字符 --> base64编码 --> 打乱顺序(前后双指针方式) = 密文
 
 ### 解密:
 
-密文字符 --> 恢复顺序 --> 得到base64编码 --> 解码为字符串 --> 转化为unicode码 --> 编码偏移解密 --> 编码为字符(base64) --> base64解码 = 明文
+密文字符 --> 恢复顺序 --> 得到base64编码 --> 解码为字符串 --> 转化为unicode码 --> 编码偏移解密 --> 解析unicode  = 明文
 
 ### 当前已支持的语言:
 
@@ -20,3 +20,5 @@ Simple encryption algorithm, for utf-8.
 + golang
 + javascript
 + typescript
+
+统一时间：UTC

@@ -15,8 +15,7 @@ func Encrypt(sourceData interface{}, secretKey string) string {
 	}
 
 	jsonStr, _ := json.Marshal(sourceData)
-	base64Str := base64.StdEncoding.EncodeToString(jsonStr)
-	unicodeSlice := getUnicodeCodes(base64Str)
+	unicodeSlice := encodeUnicode(string(jsonStr))
 	m := len(unicodeSlice)
 
 	secretKey = strings.TrimSpace(secretKey)
@@ -25,8 +24,9 @@ func Encrypt(sourceData interface{}, secretKey string) string {
 		date := time.Now()
 		secretKey = genSecretKey(&date, false)
 	}
+	fmt.Println(secretKey)
 
-	secretUnicodesArr := getUnicodeCodes(secretKey)
+	secretUnicodesArr := encodeUnicode(secretKey)
 	n := len(secretUnicodesArr)
 	unicodeArray := make([]int, m)
 	for i, base64Unicode := range unicodeSlice {
@@ -35,25 +35,19 @@ func Encrypt(sourceData interface{}, secretKey string) string {
 	}
 
 	unicodeStr := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(unicodeArray)), ","), "[]")
-	encryptData := base64.StdEncoding.EncodeToString([]byte(unicodeStr))
-	return shuffleString(encryptData)
+	encryString := base64Encode(unicodeStr)
+	return shuffleString(encryString)
 }
 
 func Decrypt(encryptString string, validJSON bool, secretKey string) string {
-	if encryptString == "" {
-		return ""
-	}
-
 	encryptString = strings.TrimSpace(encryptString)
 	if encryptString == "" {
 		return ""
 	}
 
 	base64Str := unshuffleString(encryptString)
-	unicodeStr, _ := base64.StdEncoding.DecodeString(base64Str)
-	unicodeSlice := stringToIntSlice(strings.Split(string(unicodeStr), ","))
-
-	m := len(unicodeSlice)
+	unicodeStr := base64Decode(base64Str)
+	unicodeSlice := stringToIntSlice(strings.Split(unicodeStr, ","))
 
 	secretKey = strings.TrimSpace(secretKey)
 	hasSecretKey := len(secretKey) > 0
@@ -62,20 +56,19 @@ func Decrypt(encryptString string, validJSON bool, secretKey string) string {
 		secretKey = genSecretKey(&date, false)
 	}
 
-	secretUnicodesArr := getUnicodeCodes(secretKey)
+	secretUnicodesArr := encodeUnicode(secretKey)
 	n := len(secretUnicodesArr)
 
-	base64Arr := make([]byte, m)
+	var stringArr []string
 	for i, base64Unicode := range unicodeSlice {
 		iv := secretUnicodesArr[i%n]
-		base64Arr[i] = byte(base64Unicode - iv)
+		stringArr = append(stringArr, decodeUnicode(base64Unicode-iv))
 	}
 
-	base64Str = string(base64Arr)
-	decryptData, _ := base64.StdEncoding.DecodeString(base64Str)
+	decryptData := strings.Join(stringArr, "")
 
 	if validJSON {
-		if isJSON(decryptData) || hasSecretKey {
+		if isJSON([]byte(decryptData)) || hasSecretKey {
 			return string(decryptData)
 		}
 		secretKey = genSecretKey(nil, true)
@@ -83,6 +76,15 @@ func Decrypt(encryptString string, validJSON bool, secretKey string) string {
 	}
 
 	return string(decryptData)
+}
+
+func base64Encode(str string) string {
+	return base64.StdEncoding.EncodeToString([]byte(str))
+}
+
+func base64Decode(str string) string {
+	data, _ := base64.StdEncoding.DecodeString(str)
+	return string(data)
 }
 
 func getPreviousMinuteDate(date *time.Time) time.Time {
@@ -103,7 +105,9 @@ func genSecretKey(date *time.Time, previousMinute bool) string {
 	}
 	timestampInSeconds := date.Unix()
 	timestampInMinutes := timestampInSeconds - (timestampInSeconds % 60)
-	return fmt.Sprint(timestampInMinutes)
+	timestampInMinutes = timestampInMinutes * int64(date.Minute()) / 10
+	s := fmt.Sprint(timestampInMinutes)
+	return reverseString(s) + s
 }
 
 func isJSON(data []byte) bool {
@@ -111,14 +115,17 @@ func isJSON(data []byte) bool {
 	return json.Unmarshal(data, &js) == nil
 }
 
-func getUnicodeCodes(str string) []int {
-	unicode := make([]int, len(str))
-
-	for i, char := range str {
-		unicode[i] = int(char)
+func encodeUnicode(str string) []int {
+	var unicodes []int
+	for _, char := range str {
+		unicodes = append(unicodes, int(char))
 	}
 
-	return unicode
+	return unicodes
+}
+
+func decodeUnicode(unicode int) string {
+	return string(rune(unicode))
 }
 
 func shuffleString(text string) string {
@@ -146,4 +153,12 @@ func stringToIntSlice(strSlice []string) []int {
 		intSlice[i] = intValue
 	}
 	return intSlice
+}
+
+func reverseString(s string) string {
+	r := []rune(s)
+	for i, j := 0, len(r)-1; i < j; i, j = i+1, j-1 {
+		r[i], r[j] = r[j], r[i]
+	}
+	return string(r)
 }
