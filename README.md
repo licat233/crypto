@@ -1,4 +1,4 @@
-# crypto
+# cryptox
 
 Simple encryption algorithm.
 
