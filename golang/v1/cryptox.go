@@ -24,7 +24,6 @@ func Encrypt(sourceData interface{}, secretKey string) string {
 		date := time.Now()
 		secretKey = genSecretKey(&date, false)
 	}
-	fmt.Println(secretKey)
 
 	secretUnicodesArr := encodeUnicode(secretKey)
 	n := len(secretUnicodesArr)

@@ -12,7 +12,6 @@ class Cryptox
         $secretKey = trim($secretKey);
         $hasSecretKey = $secretKey && strlen($secretKey) > 0;
         if (!$hasSecretKey) $secretKey = self::genSecretKey();
-        echo $secretKey;
         $secretKeyArr = self::stringToArray($secretKey);
         $n = count($secretKeyArr);
         $unicodeArray = [];
