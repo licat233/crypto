@@ -4,7 +4,7 @@ Simple encryption algorithm, for utf-8.
 
 一个简单的加密工具，支持unicode；
 
-## 算法解析：核心凯撒算法-Caesar cipher
+## 核心算法: 凯撒算法-Caesar cipher
 
 ### 加密:
 
@@ -20,5 +20,3 @@ Simple encryption algorithm, for utf-8.
 + golang
 + javascript
 + typescript
-
-统一时间：UTC
