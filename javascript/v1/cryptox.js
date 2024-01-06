@@ -95,12 +95,6 @@ const Cryptox = (function () {
         }
     }
 
-    function getPreviousMinuteDate(date) {
-        const now = date || new Date();
-        now.setMinutes(now.getMinutes() - 1);
-        return now;
-    }
-
     function shuffleString(text) {
         const characters = text.split('');
         let left = 0;
